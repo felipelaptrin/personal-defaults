@@ -1,0 +1,17 @@
+---> Theme And Style
+cobalt2
+material icon theme
+
+---> Utils
+bracket pair colorizer
+thunder client
+color highlight
+
+
+---> Programming
+python3
+jupyter
+pylance
+yaml
+toml
+python docstring generator

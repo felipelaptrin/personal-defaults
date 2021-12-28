@@ -1,0 +1,29 @@
+{
+    // Python: Default configs
+    "python.defaultInterpreterPath": "/usr/bin/python3", 
+    "[python]": {
+        "editor.formatOnSave": true,
+        "editor.codeActionsOnSave": {
+            "source.organizeImports": true
+        },
+        "editor.tabSize": 4
+    },
+    // Python: Black + isort + Flake8 formatting
+    "python.formatting.provider": "black",
+    "python.formatting.blackPath": "black",
+    "python.formatting.blackArgs": ["--line-length", "100"],
+    "python.sortImports.args": [
+        "-m3",
+        "--tc",
+        "-fgw 0",
+        "--up",
+        "-n",
+        "-l 100"
+    ],
+    "python.linting.flake8Enabled": true,
+    "python.linting.flake8Path": "flake8",
+    "python.linting.flake8Args": ["--ignore=E203, W503", "--max-line-length=100"],
+    // Vscode theme and style
+    "workbench.iconTheme": "material-icon-theme",
+    "workbench.colorTheme": "Cobalt2",
+}
