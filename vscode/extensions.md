@@ -6,7 +6,7 @@
 - `bracket pair colorizer` - Make easier when programmin with multiple brackets
 - `thunder client` - Alternative for Postman
 - `color highlight` - Highlight colors hex
-
+- `gitignore`
 
 # Programming
 - `python3` - IntelliSense and debuging for python
