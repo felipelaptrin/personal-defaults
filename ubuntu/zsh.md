@@ -6,6 +6,7 @@
 
 2) `sh -c "$(wget -O- https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"`
 
+3) Make zsh the default by `sudo nano ~/.bashrc` then adding `exec zsh` in the end of the file 
 
 ## Fonts
 
@@ -21,4 +22,4 @@
  - Background: #111420
  - Theme: XTerm (but change blue for #1B80C4)
 
-4) On VSCode add in preferences: `"terminal.integrated.fontFamily": "MesloLGS NF"`
+4) On VSCode add in preferences: `"terminal.integrated.fontFamily": "MesloLGS NF"`. Restart VS Code for it to work.
