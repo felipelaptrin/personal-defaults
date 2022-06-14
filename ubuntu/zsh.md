@@ -23,3 +23,10 @@
  - Theme: XTerm (but change blue for #1B80C4)
 
 4) On VSCode add in preferences: `"terminal.integrated.fontFamily": "MesloLGS NF"`. Restart VS Code for it to work.
+
+5) On VSCode use: 
+```
+"workbench.colorCustomizations": {
+  "terminal.ansiBlue":"#0066FF"
+}
+```
