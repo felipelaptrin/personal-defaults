@@ -1,0 +1,255 @@
+- name: Setup Machine
+  hosts: localhost
+  connection: local
+  vars:
+    ubuntu_version: focal # MIGHT CHANGE ACCORDING TO UBUNTU REALEASE
+
+  tasks:
+    - name: Install Basics
+      become: true
+      apt:
+        name: 
+        - curl
+        - vim
+        - apt-transport-https
+        - xz-utils
+        - libedit-dev
+        - make
+        - build-essential
+        - libssl-dev
+        - zlib1g-dev
+        - libbz2-dev
+        - libreadline-dev
+        - libsqlite3-dev
+        - wget
+        - llvm
+        - libncurses5-dev
+        - xz-utils
+        - tk-dev
+        - libxml2-dev
+        - libxmlsec1-dev
+        - libffi-dev
+        - liblzma-dev
+        - libreadline6
+        - libreadline6-dev
+
+        state: latest
+
+    - name: Install ZSH
+      block:
+        - name: APT install ZSH
+          become: true
+          apt:
+            name: zsh
+        
+        - name: Download installation script
+          get_url:
+            url: https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh
+            dest: ~/Downloads/install_zsh.sh
+
+        - name: Run installation script
+          command: sh ~/Downloads/install_zsh.sh
+
+        - name: Make ZSH default shell
+          lineinfile:
+            path: ~/.bashrc
+            line: exec zsh
+
+    - name: Install Font
+      become: true
+      apt:
+        name: 
+        - powerline
+        - fonts-powerline
+
+    - name: Install powerlevel10k (terminal theme)
+      block:
+        - name: Clone Github repo
+          git:
+            repo: https://gitee.com/romkatv/powerlevel10k.git
+            dest: ~/powerlevel10k
+            depth: 1
+
+        - name: Set powerlevel10k as zsh theme
+          lineinfile:
+            path: ~/.zshrc
+            line: source ~/powerlevel10k/powerlevel10k.zsh-theme
+
+        - name: Ignore errors
+          lineinfile:
+            path: ~/.zshrc
+            insertbefore: BOF
+            line: ZSH_DISABLE_COMPFIX=true
+
+    - name: Install Brave web browser
+      block:
+        - name: Download brave repository
+          get_url:
+            url: https://brave-browser-apt-release.s3.brave.com/brave-browser-archive-keyring.gpg
+            dest: /usr/share/keyrings/brave-browser-archive-keyring.gpg
+        
+        - name: Install brave repository
+          apt_repository:
+            repo: deb [signed-by=/usr/share/keyrings/brave-browser-archive-keyring.gpg arch=amd64] https://brave-browser-apt-release.s3.brave.com/ stable main
+            filename: brave-browser-release
+          
+        - name: Install brave
+          become: true
+          apt:
+            name: brave-browser
+            update-cache: true
+
+    - name: Install Docker
+      block:
+        - name: Add Docker GPG apt Key
+          become: true
+          apt_key:
+            url: https://download.docker.com/linux/ubuntu/gpg
+            state: present
+
+        - name: Add Docker Repository
+          apt_repository:
+            repo: deb https://download.docker.com/linux/ubuntu {{ ubuntu_version }} stable
+            state: present
+
+        - name: Install docker
+          become: true
+          apt:
+            name: 
+            - docker-ce
+            - docker-ce-cli 
+            - containerd.io 
+            - docker-compose-plugin
+            update_cache: true
+        
+        - name: Create docker group
+          group:
+            name: docker
+            state: present
+
+        - name: Add user to docker group
+          user:
+            name={{ user }}
+            group=docker
+            append=yes
+
+        - name: Create "docker" group
+          become: true
+          group:
+            name: docker
+            state: present
+
+        - name: Get user
+          shell: whoami
+          register: linux_user
+
+        - name: Add remote user to "docker" group
+          become: true
+          user:
+            name: "{{ linux_user.stdout }}"
+            group: docker
+            append: yes
+
+    - name: Install Docker Compose
+      become: true
+      get_url:
+        url : https://github.com/docker/compose/releases/download/1.29.2/docker-compose-Linux-x86_64
+        dest: /usr/local/bin/docker-compose
+        mode: 'u=rwx,g=rx,o=rx'
+
+    - name: Install Terraform
+      become: true
+      block:
+      - name: Install Terraform needed packages
+        apt:
+          name: 
+          - gnupg
+          - software-properties-common
+          state: latest
+      
+      - name: Add Docker GPG apt Key
+        apt_key:
+          url: https://apt.releases.hashicorp.com/gpg
+          state: present
+      
+      - name: Add key to repository
+        apt_repository:
+          repo: deb [arch=amd64] https://apt.releases.hashicorp.com {{ ubuntu_version }} main 
+          state: present
+
+      - name: Install docker
+        apt:
+          name: terraform
+          update_cache: true
+
+    - name: Install Pyenv
+      become: false
+      block:
+        - name: Download Pyenv installation script
+          get_url:
+            url : https://github.com/docker/compose/releases/download/1.29.2/docker-compose-Linux-x86_64
+            dest: ~/Downloads/pyenv_installer
+
+        - name: Run Pyenv installer
+          shell: curl -L https://github.com/pyenv/pyenv-installer/raw/master/bin/pyenv-installer | bash
+          args:
+            warn: no
+
+        - name: Add to PATH
+          blockinfile:
+            path: ~/.zshrc
+            block: |
+              export PYENV_ROOT="$HOME/.pyenv"
+              export PATH="$PATH:$PYENV_ROOT/bin"
+              eval "$(pyenv init --path)"
+              eval "$(pyenv virtualenv-init -)"
+
+    - name: Install Kubectl
+      block:
+        - name: Get latest Kubectl stable version
+          register: kubectl_version
+          uri:
+            url: https://dl.k8s.io/release/stable.txt
+            follow_redirects: yes
+            return_content: yes
+
+        - name: Download latest realease of Kubectl
+          become: true
+          get_url:
+            url : "https://dl.k8s.io/release/{{ kubectl_version.content }}/bin/linux/amd64/kubectl"
+            dest: /usr/local/bin/kubectl
+            mode: 'u=rwx,g=rx,o=rx'
+            
+    - name: Install Kind
+      block:
+      - name: Get latest Kind version
+        register: kind_version
+        uri: 
+          url: https://api.github.com/repos/kubernetes-sigs/kind/releases/latest
+          follow_redirects: yes
+          return_content: yes
+      
+      - name: Download Kind bianary
+        become: true
+        get_url:
+          url: "https://kind.sigs.k8s.io/dl/{{ kind_version.json.tag_name }}/kind-linux-amd64"
+          dest: /usr/local/bin/kind
+          mode: 'u=rwx,g=rx,o=rx'
+
+    - name: Install AWS CLI
+      become: true
+      block:
+      - name: Download CLI zip
+        get_url:
+          url: "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip"
+          dest: /tmp/aws_cli.zip
+
+      - name: Unzip AWS CLI zipped file
+        unarchive:
+          src: /tmp/aws_cli.zip
+          dest: /tmp
+
+      - name: Run AWS CLI installation script
+        shell: 
+          chdir: /tmp
+          cmd: ./aws/install
