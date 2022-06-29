@@ -2,7 +2,7 @@
   hosts: localhost
   connection: local
   vars:
-    ubuntu_version: focal # MIGHT CHANGE ACCORDING TO UBUNTU REALEASE
+    ubuntu_version: jammy # MIGHT CHANGE ACCORDING TO UBUNTU REALEASE (example: focal for version 20)
 
   tasks:
     - name: Install Basics
@@ -30,7 +30,6 @@
         - libxmlsec1-dev
         - libffi-dev
         - liblzma-dev
-        - libreadline6
         - libreadline6-dev
 
         state: latest
@@ -108,6 +107,7 @@
             state: present
 
         - name: Add Docker Repository
+          become: true
           apt_repository:
             repo: deb https://download.docker.com/linux/ubuntu {{ ubuntu_version }} stable
             state: present
@@ -127,17 +127,18 @@
             name: docker
             state: present
 
-        - name: Add user to docker group
-          user:
-            name={{ user }}
-            group=docker
-            append=yes
-
         - name: Create "docker" group
           become: true
           group:
             name: docker
             state: present
+
+        - name: Add user to docker group
+          become: true
+          user:
+            name: "flat"
+            group: docker
+            append: yes
 
         - name: Get user
           shell: whoami
